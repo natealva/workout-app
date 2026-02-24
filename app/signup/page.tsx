@@ -1,6 +1,41 @@
+"use client";
+
 import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { useState } from "react";
+import { supabase } from "@/lib/supabase";
 
 export default function SignupPage() {
+  const router = useRouter();
+  const [error, setError] = useState<string | null>(null);
+  const [loading, setLoading] = useState(false);
+
+  async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
+    e.preventDefault();
+    setError(null);
+    setLoading(true);
+
+    const form = e.currentTarget;
+    const formData = new FormData(form);
+    const email = (formData.get("email") as string) ?? "";
+    const password = (formData.get("password") as string) ?? "";
+
+    const { error: signUpError } = await supabase.auth.signUp({
+      email,
+      password,
+    });
+
+    setLoading(false);
+
+    if (signUpError) {
+      setError(signUpError.message);
+      return;
+    }
+
+    router.push("/home");
+    router.refresh();
+  }
+
   return (
     <div className="flex min-h-screen flex-col justify-center px-6 py-12">
       <div className="mx-auto w-full max-w-sm">
@@ -9,7 +44,12 @@ export default function SignupPage() {
           Create an account to get started.
         </p>
 
-        <form className="mt-8 space-y-5" action="#" method="post">
+        <form className="mt-8 space-y-5" onSubmit={handleSubmit}>
+          {error && (
+            <p className="rounded-lg border border-red-500/50 bg-red-500/10 px-4 py-3 text-sm text-red-400">
+              {error}
+            </p>
+          )}
           <div>
             <label htmlFor="email" className="block text-sm font-medium text-foreground">
               Email
@@ -20,7 +60,8 @@ export default function SignupPage() {
               type="email"
               autoComplete="email"
               required
-              className="mt-1.5 block w-full rounded-lg border border-white/20 bg-white/5 px-4 py-3 text-foreground placeholder:text-foreground/50 focus:border-accent focus:outline-none focus:ring-1 focus:ring-accent"
+              disabled={loading}
+              className="mt-1.5 block w-full rounded-lg border border-white/20 bg-white/5 px-4 py-3 text-foreground placeholder:text-foreground/50 focus:border-accent focus:outline-none focus:ring-1 focus:ring-accent disabled:opacity-50"
               placeholder="you@example.com"
             />
           </div>
@@ -34,15 +75,17 @@ export default function SignupPage() {
               type="password"
               autoComplete="new-password"
               required
-              className="mt-1.5 block w-full rounded-lg border border-white/20 bg-white/5 px-4 py-3 text-foreground placeholder:text-foreground/50 focus:border-accent focus:outline-none focus:ring-1 focus:ring-accent"
+              disabled={loading}
+              className="mt-1.5 block w-full rounded-lg border border-white/20 bg-white/5 px-4 py-3 text-foreground placeholder:text-foreground/50 focus:border-accent focus:outline-none focus:ring-1 focus:ring-accent disabled:opacity-50"
               placeholder="••••••••"
             />
           </div>
           <button
             type="submit"
-            className="w-full rounded-lg bg-accent px-4 py-3 font-semibold text-white transition-colors hover:bg-accent/90 focus:outline-none focus:ring-2 focus:ring-accent focus:ring-offset-2 focus:ring-offset-background"
+            disabled={loading}
+            className="w-full rounded-lg bg-accent px-4 py-3 font-semibold text-white transition-colors hover:bg-accent/90 focus:outline-none focus:ring-2 focus:ring-accent focus:ring-offset-2 focus:ring-offset-background disabled:opacity-50"
           >
-            Sign up
+            {loading ? "Creating account…" : "Sign up"}
           </button>
         </form>
 
