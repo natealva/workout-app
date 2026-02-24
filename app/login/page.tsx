@@ -20,20 +20,22 @@ export default function LoginPage() {
     const email = (formData.get("email") as string) ?? "";
     const password = (formData.get("password") as string) ?? "";
 
-    const { error: signInError } = await supabase.auth.signInWithPassword({
+    const response = await supabase.auth.signInWithPassword({
       email,
       password,
     });
 
+    console.log("Supabase signIn response:", response);
+
     setLoading(false);
 
-    if (signInError) {
-      setError(signInError.message);
+    if (response.error) {
+      setError(response.error.message);
       return;
     }
 
-    router.push("/home");
     router.refresh();
+    window.location.href = "/home";
   }
 
   return (
